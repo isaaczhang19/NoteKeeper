@@ -2,11 +2,8 @@ package com.example.zcg19.notekeeper;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
@@ -16,7 +13,8 @@ import android.widget.Spinner;
 import java.util.List;
 
 public class NoteActivity extends AppCompatActivity {
-    public static final String NOTE_INFO = "com.example.zcg19.notekeeper.NOTE_INFO";
+    public static final String NOTE_POSITION = "com.example.zcg19.notekeeper.NOTE_POSITION";
+    public static final int POSITION_NOT_SET = -1;
     private NoteInfo mNote;
     private boolean mIsNewNote;
 
@@ -26,7 +24,6 @@ public class NoteActivity extends AppCompatActivity {
         setContentView(R.layout.activity_note);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
 
         Spinner spinnerCourse = findViewById(R.id.note_spinner);
 
@@ -60,8 +57,12 @@ public class NoteActivity extends AppCompatActivity {
 
     private void readDisplayStateValue() {
         Intent intent = getIntent();
-        mNote = intent.getParcelableExtra(NOTE_INFO);
-        mIsNewNote = mNote == null;
+        int position = intent.getIntExtra(NOTE_POSITION, POSITION_NOT_SET);
+//        mIsNewNote = mNote == null;
+        mIsNewNote = position == POSITION_NOT_SET;
+        if (!mIsNewNote){
+            mNote = DataManager.getInstance().getNotes().get(position);
+        }
     }
 
     @Override
