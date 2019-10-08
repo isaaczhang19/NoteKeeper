@@ -2,6 +2,7 @@ package com.example.zcg19.notekeeper;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
@@ -17,6 +18,11 @@ public class NoteActivity extends AppCompatActivity {
     public static final int POSITION_NOT_SET = -1;
     private NoteInfo mNote;
     private boolean mIsNewNote;
+    private Spinner mSpinnerCourse;
+    private EditText mTextNoteTitle;
+    private EditText mTextNoteBody;
+    private int mNotePosition;
+    private boolean mIsCancelling;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -25,22 +31,22 @@ public class NoteActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        Spinner spinnerCourse = findViewById(R.id.note_spinner);
+        mSpinnerCourse = findViewById(R.id.note_spinner);
 
         List<CourseInfo> courses = DataManager.getInstance().getCourses();
         ArrayAdapter<CourseInfo> adapterCourses =
                 new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, courses);
         adapterCourses.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        spinnerCourse.setAdapter(adapterCourses);
+        mSpinnerCourse.setAdapter(adapterCourses);
 
         readDisplayStateValue();
 
-        EditText textNoteTitle = findViewById(R.id.note_title_text);
-        EditText textNoteBody = findViewById(R.id.note_body_text);
+        mTextNoteTitle = findViewById(R.id.note_title_text);
+        mTextNoteBody = findViewById(R.id.note_body_text);
 
 
         if (!mIsNewNote){
-            displayNote(spinnerCourse, textNoteTitle, textNoteBody);
+            displayNote(mSpinnerCourse, mTextNoteTitle, mTextNoteBody);
         }
 
 
@@ -60,9 +66,17 @@ public class NoteActivity extends AppCompatActivity {
         int position = intent.getIntExtra(NOTE_POSITION, POSITION_NOT_SET);
 //        mIsNewNote = mNote == null;
         mIsNewNote = position == POSITION_NOT_SET;
-        if (!mIsNewNote){
+        if (mIsNewNote){
+            createNewNote();
+        } else {
             mNote = DataManager.getInstance().getNotes().get(position);
         }
+    }
+
+    private void createNewNote() {
+        DataManager dm = DataManager.getInstance();
+        mNotePosition = dm.createNewNote();
+        mNote = dm.getNotes().get(mNotePosition);
     }
 
     @Override
@@ -80,10 +94,46 @@ public class NoteActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_send_mail) {
+            sendEmail();
             return true;
+        } else if (id == R.id.action_cancel_note){
+            mIsCancelling = true;
+            finish();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mIsCancelling) {
+            if (mIsNewNote) {
+                DataManager.getInstance().removeNote(mNotePosition);
+            }
+        } else {
+            saveNote();
+        }
+
+
+    }
+
+    private void saveNote() {
+        mNote.setCourse((CourseInfo) mSpinnerCourse.getSelectedItem());
+        mNote.setTitle(mTextNoteTitle.getText().toString());
+        mNote.setText(mTextNoteBody.getText().toString());
+    }
+
+    private void sendEmail() {
+        CourseInfo course = (CourseInfo) mSpinnerCourse.getSelectedItem();
+        String subject = mTextNoteTitle.getText().toString();
+        String text = "Check out what I have learned from my note \"" +
+                course.getTitle() + "\"\n" + mTextNoteBody.getText();
+        Intent intent = new Intent(Intent.ACTION_SEND);
+        intent.setType("message/rfc2822"); // standard type of send email
+        intent.putExtra(Intent.EXTRA_SUBJECT, subject);
+        intent.putExtra(Intent.EXTRA_TEXT, text);
+        startActivity(intent);
     }
 }
