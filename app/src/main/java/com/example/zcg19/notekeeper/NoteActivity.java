@@ -2,9 +2,6 @@ package com.example.zcg19.notekeeper;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.provider.ContactsContract;
-import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
@@ -12,6 +9,9 @@ import android.widget.EditText;
 import android.widget.Spinner;
 
 import java.util.List;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
 public class NoteActivity extends AppCompatActivity {
     public static final String NOTE_POSITION = "com.example.zcg19.notekeeper.NOTE_POSITION";
